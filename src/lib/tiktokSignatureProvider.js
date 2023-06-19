@@ -25,6 +25,13 @@ async function signRequest(providerPath, url, headers, cookieJar) {
         return url;
     }
 
+    if (cookieJar.getCookieByName('sessionid')) {
+        console.log('Using session ID');
+        return url;
+    } else {
+        console.log('Not using session ID')
+    }
+
     let params = {
         url,
         client: 'ttlive-node',
