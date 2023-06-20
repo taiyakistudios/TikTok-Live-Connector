@@ -53,6 +53,7 @@ class TikTokHttpClient {
 
     setMsToken(msToken) {
         this.cookieJar.setCookie('msToken', msToken)
+        console.log('msToken: ', msToken)
     }
 
     async #buildUrl(host, path, params, sign) {
