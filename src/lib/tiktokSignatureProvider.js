@@ -43,6 +43,8 @@ async function signRequest(providerPath, url, headers, cookieJar) {
     try {
         let signedUrl
         if (useCustomSigner) {
+            console.log('Using custom signer with provided msToken')
+
             const { signature, navigator } = await createCustomSignedUrl(url)
 
             if (headers) {
@@ -55,6 +57,8 @@ async function signRequest(providerPath, url, headers, cookieJar) {
 
             signedUrl = signature['signed_url']
         } else {
+            console.log('Using default signer')
+
             let params = {
                 url,
                 client: 'ttlive-node',
