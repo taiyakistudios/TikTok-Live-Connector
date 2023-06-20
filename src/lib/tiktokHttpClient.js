@@ -33,7 +33,7 @@ class TikTokHttpClient {
         }
 
         if (msToken) {
-            this.setMsToken(msToken)
+            this.setCustomMsToken(msToken)
         }
     }
 
@@ -51,8 +51,8 @@ class TikTokHttpClient {
         this.cookieJar.setCookie('sid_tt', sessionId);
     }
 
-    setMsToken(msToken) {
-        this.cookieJar.setCookie('msToken', msToken)
+    setCustomMsToken(msToken) {
+        this.cookieJar.setCookie('customMsToken', msToken)
     }
 
     async #buildUrl(host, path, params, sign) {

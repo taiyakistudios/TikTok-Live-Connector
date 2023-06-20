@@ -38,9 +38,8 @@ async function signRequest(providerPath, url, headers, cookieJar) {
         return url;
     }
 
-    const msToken = cookieJar?.getCookieByName('msToken')
-    let useCustomSigner = msToken != null && msToken.length > 0
-    console.log('msToken: ', msToken)
+    const customMsToken = cookieJar?.getCookieByName('customMsToken')
+    let useCustomSigner = Boolean(customMsToken)
 
     try {
         let signedUrl
@@ -51,6 +50,10 @@ async function signRequest(providerPath, url, headers, cookieJar) {
 
             if (headers) {
                 headers['User-Agent'] = navigator['user_agent']
+            }
+
+            if (cookieJar) {
+                cookieJar.setCookie('msToken', customMsToken)
             }
 
             signedUrl = signature['signed_url']
