@@ -76,6 +76,7 @@ class WebcastPushConnection extends EventEmitter {
      * @param {object} [options[].websocketHeaders={}] Custom request headers for websocket.client
      * @param {object} [options[].requestOptions={}] Custom request options for axios. Here you can specify an `httpsAgent` to use a proxy and a `timeout` value for example.
      * @param {object} [options[].websocketOptions={}] Custom request options for websocket.client. Here you can specify an `agent` to use a proxy and a `timeout` value for example.
+     * @param {object} [options[].msToken=null] If a custom msToken is provided, the custom signer will be used.
      */
     constructor(uniqueId, options) {
         super();
@@ -83,7 +84,12 @@ class WebcastPushConnection extends EventEmitter {
         this.#setOptions(options || {});
 
         this.#uniqueStreamerId = validateAndNormalizeUniqueId(uniqueId);
-        this.#httpClient = new TikTokHttpClient(this.#options.requestHeaders, this.#options.requestOptions, this.#options.sessionId);
+        this.#httpClient = new TikTokHttpClient(
+            this.#options.requestHeaders,
+            this.#options.requestOptions,
+            this.#options.sessionId,
+            this.#options.msToken,
+        );
 
         this.#clientParams = {
             ...Config.DEFAULT_CLIENT_PARAMS,
@@ -104,6 +110,7 @@ class WebcastPushConnection extends EventEmitter {
                 enableRequestPolling: true,
                 requestPollingIntervalMs: 1000,
                 sessionId: null,
+                msToken: null,
                 clientParams: {},
                 requestHeaders: {},
                 websocketHeaders: {},
@@ -141,6 +148,8 @@ class WebcastPushConnection extends EventEmitter {
         this.#isConnecting = true;
 
         try {
+            console.log('Fetching room ID...')
+
             // roomId already specified?
             if (roomId) {
                 this.#roomId = roomId;
@@ -148,6 +157,9 @@ class WebcastPushConnection extends EventEmitter {
             } else {
                 await this.#retrieveRoomId();
             }
+
+            console.log('Fetching room ID completed.')
+            console.log('Fetching room info...')
 
             // Fetch room info if option enabled
             if (this.#options.fetchRoomInfoOnConnect) {
@@ -159,12 +171,19 @@ class WebcastPushConnection extends EventEmitter {
                 }
             }
 
+            console.log('Fetching room info completed.')
+
             // Fetch all available gift info if option enabled
             if (this.#options.enableExtendedGiftInfo) {
                 await this.#fetchAvailableGifts();
             }
 
+            console.log('Fetching room data...')
+
             await this.#fetchRoomData(true);
+
+            console.log('Fetching room data completed.')
+            console.log('Upgrading websocket...')
 
             // Sometimes no upgrade to WebSocket is offered by TikTok
             // In that case we use request polling (if enabled and possible)
@@ -183,6 +202,8 @@ class WebcastPushConnection extends EventEmitter {
 
                 this.#startFetchRoomPolling();
             }
+
+            console.log('Upgrading websocket completed.')
 
             this.#isConnected = true;
 

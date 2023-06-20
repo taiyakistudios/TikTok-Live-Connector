@@ -7,6 +7,8 @@ const axios = require('axios').create({
         'User-Agent': `${pkg.name}/${pkg.version} ${process.platform}`,
     },
 });
+const Signer = require('tiktok-signature')
+const signer = new Signer()
 
 let config = {
     enabled: true,
@@ -20,53 +22,76 @@ function signWebcastRequest(url, headers, cookieJar) {
     return signRequest('webcast/sign_url', url, headers, cookieJar);
 }
 
+async function createCustomSignedUrl(url) {
+    await signer.init()
+
+    const signature = await signer.sign(url)
+    const navigator = await signer.navigator()
+
+    await signer.close()
+
+    return { signature, navigator }
+}
+
 async function signRequest(providerPath, url, headers, cookieJar) {
     if (!config.enabled) {
         return url;
     }
 
-    if (cookieJar.getCookieByName('sessionid')) {
-        console.log('Using session ID');
-        return url;
-    } else {
-        console.log('Not using session ID')
-    }
-
-    let params = {
-        url,
-        client: 'ttlive-node',
-        ...config.extraParams,
-    };
-
-    params.uuc = getUuc();
+    let useCustomSigner = Boolean(cookieJar?.getCookie('msToken'))
 
     try {
-        let signResponse = await axios.get(config.signProviderHost + providerPath, { params, responseType: 'json' });
+        let signedUrl
+        if (useCustomSigner) {
+            const { signature, navigator } = await createCustomSignedUrl(url)
 
-        if (signResponse.status !== 200) {
-            throw new Error(`Status Code: ${signResponse.status}`);
-        }
+            if (headers) {
+                headers['User-Agent'] = navigator['user_agent']
+            }
 
-        if (!signResponse.data?.signedUrl) {
-            throw new Error('missing signedUrl property');
-        }
+            if (cookieJar) {
+                cookieJar.setCookie('msToken', 'scYA7i0oboy-z2G9EZ_LGd3BKN7ng6BdbV3sJ6K0un2k6ozC9ykw8iQ0up9LYt3A_CtbzjqAkfQeBlKiBS7OmaeBxH0Pv1t68kQekJ59vWCC7lIKF-Mti8xuQOsd3o4zJcmwXOw=')
+            }
 
-        if (headers) {
-            headers['User-Agent'] = signResponse.data['User-Agent'];
-        }
+            signedUrl = signature['signed_url']
+        } else {
+            let params = {
+                url,
+                client: 'ttlive-node',
+                ...config.extraParams,
+            };
 
-        if (cookieJar) {
-            cookieJar.setCookie('msToken', signResponse.data['msToken']);
+            params.uuc = getUuc();
+
+            let signResponse = await axios.get(config.signProviderHost + providerPath, { params, responseType: 'json' });
+
+            if (signResponse.status !== 200) {
+                throw new Error(`Status Code: ${signResponse.status}`);
+            }
+
+            if (!signResponse.data?.signedUrl) {
+                throw new Error('missing signedUrl property');
+            }
+
+            if (headers) {
+                headers['User-Agent'] = signResponse.data['User-Agent'];
+            }
+
+            if (cookieJar) {
+                cookieJar.setCookie('msToken', signResponse.data['msToken']);
+            }
+
+            signedUrl = signResponse.data.signedUrl
         }
 
         signEvents.emit('signSuccess', {
             originalUrl: url,
-            signedUrl: signResponse.data.signedUrl,
+            signedUrl,
             headers,
             cookieJar,
         });
 
-        return signResponse.data.signedUrl;
+        return signedUrl;
     } catch (error) {
         signEvents.emit('signError', {
             originalUrl: url,

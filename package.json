@@ -53,6 +53,7 @@
   "dependencies": {
     "axios": "^0.25.0",
     "protobufjs": "^6.11.2",
+    "tiktok-signature": "^1.8.0",
     "websocket": "^1.0.34"
   },
   "devDependencies": {

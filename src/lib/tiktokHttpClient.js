@@ -6,7 +6,7 @@ const { signWebcastRequest } = require('./tiktokSignatureProvider');
 const Config = require('./webcastConfig.js');
 
 class TikTokHttpClient {
-    constructor(customHeaders, axiosOptions, sessionId) {
+    constructor(customHeaders, axiosOptions, sessionId, msToken) {
         const { Cookie } = customHeaders || {};
 
         if (Cookie) {
@@ -31,6 +31,10 @@ class TikTokHttpClient {
         if (sessionId) {
             this.setSessionId(sessionId);
         }
+
+        if (msToken) {
+            this.setMsToken(msToken)
+        }
     }
 
     #get(url, responseType) {
@@ -45,6 +49,10 @@ class TikTokHttpClient {
         this.cookieJar.setCookie('sessionid', sessionId);
         this.cookieJar.setCookie('sessionid_ss', sessionId);
         this.cookieJar.setCookie('sid_tt', sessionId);
+    }
+
+    setMsToken(msToken) {
+        this.cookieJar.setCookie('msToken', msToken)
     }
 
     async #buildUrl(host, path, params, sign) {
