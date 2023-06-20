@@ -38,7 +38,7 @@ async function signRequest(providerPath, url, headers, cookieJar) {
         return url;
     }
 
-    let useCustomSigner = Boolean(cookieJar?.getCookie('msToken'))
+    let useCustomSigner = Boolean(cookieJar?.getCookieByName('msToken'))
 
     try {
         let signedUrl
