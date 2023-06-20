@@ -51,10 +51,6 @@ async function signRequest(providerPath, url, headers, cookieJar) {
                 headers['User-Agent'] = navigator['user_agent']
             }
 
-            if (cookieJar) {
-                cookieJar.setCookie('msToken', 'scYA7i0oboy-z2G9EZ_LGd3BKN7ng6BdbV3sJ6K0un2k6ozC9ykw8iQ0up9LYt3A_CtbzjqAkfQeBlKiBS7OmaeBxH0Pv1t68kQekJ59vWCC7lIKF-Mti8xuQOsd3o4zJcmwXOw=')
-            }
-
             signedUrl = signature['signed_url']
         } else {
             console.log('Using default signer')
